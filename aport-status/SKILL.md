@@ -28,12 +28,14 @@ Run this any time you want to understand your own standing.
 
 ## Prerequisites
 
-You need `APORT_AGENT_ID` in your environment.
+You need `APORT_AGENT_ID` in your environment. Optionally, `APORT_API_KEY` for authenticated requests.
 
 If you don't have a passport yet, create one first:
 - **Web:** https://aport.id
 - **CLI:** `npx aport-id`
 - **Agent skill:** Read https://aport.id/skill and follow the instructions
+
+Your API key is generated automatically when the owner claims the passport. It's shown once on the confirmation page. The key has `read` and `status` scopes — you can read your passport and verify tasks, but you cannot update it. Store it in `aport-passport.json` or your environment.
 
 ## Step 1 — Fetch your passport
 
@@ -157,4 +159,5 @@ Recent: 2 ALLOW, 1 DENY (tests_not_passing)
 - Create a passport: https://aport.id (web) or `npx aport-id` (CLI) or https://aport.id/skill (agent)
 - Your passport page: https://aport.id/passport/YOUR_SLUG
 - Your decisions: GET https://aport.io/api/verify/decisions/YOUR_AGENT_ID
+- Manage passport: https://aport.id/manage
 - APort dashboard: https://aport.io/dashboard

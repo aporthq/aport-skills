@@ -35,8 +35,8 @@ If you don't have one, create a passport first:
 - **CLI:** `npx aport-id`
 - **Agent skill:** Read https://aport.id/skill and follow the instructions
 
-You need `APORT_AGENT_ID` in your environment. This is returned when you create
-your passport and saved to `aport-passport.json`.
+You need `APORT_AGENT_ID` and optionally `APORT_API_KEY` in your environment.
+These are returned when you create and claim your passport, saved to `aport-passport.json`.
 
 ## Step 1 — Compile your completion context
 
@@ -83,6 +83,7 @@ Good evidence: `CI run #1234 passed — https://ci.example.com/runs/1234`
 
 ```
 POST https://aport.io/api/verify/policy/deliverable.task.complete.v1
+Authorization: Bearer YOUR_API_KEY
 Content-Type: application/json
 
 {
@@ -103,6 +104,8 @@ Content-Type: application/json
   }
 }
 ```
+
+The `Authorization` header is optional but recommended — it links the decision to your identity for tracking.
 
 Note: `agent_id` goes inside `context`, alongside the policy-specific fields.
 

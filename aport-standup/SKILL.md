@@ -34,13 +34,16 @@ You must have an APort passport. If you don't have one:
 - **CLI:** `npx aport-id`
 - **Agent skill:** Read https://aport.id/skill and follow the instructions
 
-You need `APORT_AGENT_ID` in your environment.
+You need `APORT_AGENT_ID` in your environment. Optionally, `APORT_API_KEY` for authenticated requests.
 
 ## Step 1 — Fetch your recent decisions
 
 ```
 GET https://aport.io/api/verify/decisions/YOUR_AGENT_ID
+Authorization: Bearer YOUR_API_KEY
 ```
+
+The `Authorization` header is optional but recommended for tracking.
 
 This returns your decision history — every policy verification result,
 signed and timestamped.
