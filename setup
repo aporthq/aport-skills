@@ -1,0 +1,35 @@
+#!/bin/bash
+# aport-skills setup
+# Verifies installation and shows available skills.
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SKILLS_COUNT=$(find "$SCRIPT_DIR" -name "SKILL.md" -maxdepth 2 | wc -l | tr -d ' ')
+
+echo ""
+echo "  aport-skills installed"
+echo "  ─────────────────────"
+echo "  Location: $SCRIPT_DIR"
+echo "  Skills:   $SKILLS_COUNT found"
+echo ""
+
+for skill_dir in "$SCRIPT_DIR"/*/; do
+  if [ -f "$skill_dir/SKILL.md" ]; then
+    name=$(basename "$skill_dir")
+    echo "  /$name"
+  fi
+done
+
+echo ""
+
+if [ -z "$APORT_AGENT_ID" ]; then
+  echo "  Note: APORT_AGENT_ID not set."
+  echo "  Run /aport-id to register and get your agent ID."
+else
+  echo "  Agent: $APORT_AGENT_ID"
+fi
+
+echo ""
+echo "  Ready. Use any skill by name in your agent."
+echo ""
