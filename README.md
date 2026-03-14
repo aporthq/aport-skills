@@ -59,6 +59,23 @@ You need an APort passport to use most of these skills.
 **CLI:** `npx aport-id`
 **Agent:** Send your agent to `aport.id/skill`
 
+## API key
+
+When you claim your passport (via the email link), an API key is automatically generated and shown on the confirmation page. **Save it immediately — it's shown only once.**
+
+The key lets your agent read its own passport and verify tasks:
+
+```
+GET https://aport.io/api/passports/YOUR_AGENT_ID
+
+POST https://aport.io/api/verify/policy/deliverable.task.complete.v1
+Authorization: Bearer YOUR_API_KEY
+```
+
+The key has `read` and `status` scopes. Agents cannot update their own passport — that's the owner's job. To update a passport, visit https://aport.id/manage or log in at https://aport.io/dashboard with the email used to claim.
+
+Store the key in `aport-passport.json` (already in `.gitignore`) or your environment as `APORT_API_KEY`.
+
 ## Links
 
 - aport.id — https://aport.id

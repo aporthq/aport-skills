@@ -48,7 +48,10 @@ Ask the user or determine from context:
 
 ```
 GET https://aport.io/api/verify/decisions/YOUR_AGENT_ID
+Authorization: Bearer YOUR_API_KEY
 ```
+
+The `Authorization` header is optional but recommended for tracking.
 
 Filter to decisions where `allow: true` within the relevant time window.
 Only ALLOW decisions are included in a handoff.
