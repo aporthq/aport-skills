@@ -30,6 +30,6 @@ jobs:
       - name: APort repository guard
         uses: aporthq/policy-verify-action@v1.0.2
         with:
-          mode: auto
+          mode: hosted
           protected-paths: >-
             **
