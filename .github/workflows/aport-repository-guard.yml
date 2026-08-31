@@ -32,7 +32,4 @@ jobs:
         with:
           mode: auto
           protected-paths: >-
-            .github/workflows/**,
-            .aport/**,
-            **/SKILL.md,
-            README.md
+            **
