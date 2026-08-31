@@ -8,7 +8,7 @@ license: Apache-2.0
 compatibility: Any AI agent or coding assistant with HTTP access
 metadata:
   author: uchibeke
-  version: 1.0.0
+  version: 1.1.1
   tags: ai-agent, identity, passport, did, verifiable-credential, aport, deliverable-enforcement
 ---
 
@@ -34,24 +34,24 @@ Ask the user for the following. Suggest defaults based on what you know about yo
 | **Description** | Yes | What you do (10–1000 chars). Describe your capabilities honestly. |
 | **Email** | Yes | The user's email — APort sends a claim link so they own the passport. |
 | **Role** | No | `agent`, `assistant`, `tool`, or `service`. Default: `agent` |
-| **Framework** | No | Your model ID. See breed table below. Be honest about what you are. |
-| **Regions** | No | Array: `["global"]`, `["us"]`, `["eu"]`, `["ca"]`, `["ap"]`. Default: `["global"]` |
+| **Framework** | No | Framework/runtime or model ID. For guardrail setup use `claude-code`, `cursor`, `openclaw`, `langchain`, `crewai`, `deerflow`, or `n8n`. For model identity use model IDs like `claude-sonnet`. |
+| **Regions** | No | Examples: `["US","CA","EU"]` or `["global"]`. Default: `["global"]` |
 
 ## Step 2: Determine your capabilities
 
-Your passport comes with default capabilities, but review what you actually do:
+APort applies server-side defaults and framework presets when available. Review
+what the agent actually needs, but prefer permissive framework presets for quick
+setup so APort is not a blocker on first install.
 
 | Capability | When to include |
 |-----------|-----------------|
+| `system.command.execute` | You run shell commands, package managers, tests, or CLIs |
 | `web.fetch` | You browse the web or call APIs |
 | `web.search` | You search the internet |
 | `data.file.read` | You read files |
 | `data.file.write` | You write or create files |
-| `code.execute` | You run code |
-| `code.test` | You run tests |
 | `repo.merge` | You merge code or PRs |
 | `repo.pr.create` | You create pull requests |
-| `infra.deploy` | You deploy infrastructure |
 | `messaging.send` | You send messages (Slack, email, etc.) |
 | `mcp.tool.execute` | You use MCP tools |
 | `agent.session.create` | You spawn or manage other agents |
@@ -95,6 +95,10 @@ Skip this step entirely if you don't complete tasks — your passport will still
 
 POST to https://aport.id/api/issue with Content-Type: application/json
 
+For guardrail-focused setup, use a framework ID such as `claude-code`,
+`cursor`, `openclaw`, `langchain`, `crewai`, `deerflow`, or `n8n`. The issue API
+uses APort framework presets when available.
+
 **Minimal payload (identity only):**
 
 ```json
@@ -103,8 +107,8 @@ POST to https://aport.id/api/issue with Content-Type: application/json
   "description": "What you do",
   "email": "user@example.com",
   "role": "agent",
-  "framework": ["claude-sonnet"],
-  "regions": ["global"],
+  "framework": ["claude-code"],
+  "regions": ["US", "CA", "EU"],
   "showInGallery": true
 }
 ```
@@ -117,8 +121,8 @@ POST to https://aport.id/api/issue with Content-Type: application/json
   "description": "What you do",
   "email": "user@example.com",
   "role": "agent",
-  "framework": ["claude-sonnet"],
-  "regions": ["global"],
+  "framework": ["claude-code"],
+  "regions": ["US", "CA", "EU"],
   "showInGallery": true,
   "deliverable": {
     "require_summary": true,
@@ -146,27 +150,34 @@ Success (201) returns:
   "slug": "your-agent-name",
   "claimed": false,
   "passport_url": "https://aport.id/passport/your-agent-name",
-  "claim_email_sent": true
+  "claim_email_sent": true,
+  "api_key": "apk_...",
+  "api_key_id": "key_...",
+  "api_key_scopes": ["read"]
 }
 ```
 
 Save the `agent_id` — this is your permanent DID identifier.
+If `api_key` is returned, save it immediately. It is shown only once and can be
+used for setup, passport reads, and policy verification.
 
 Tell the user:
 1. **"Your passport is live"** — share the `passport_url`
 2. **"Check your email"** — a claim link was sent to `email`. Click it to claim ownership of this passport.
-3. **"Save the API key"** — when you click the claim link, an API key is shown on the confirmation page. **Copy it immediately — it is only shown once.** Share it back here so I can save it.
+3. **"Save the API key"** — if the response included `api_key`, save it now. If not, the claim flow can show a key after ownership is confirmed.
 
-## Step 6: Wait for claim and API key
+## Step 6: Claim ownership and store credentials
 
 The user must click the claim link in their email. **You cannot do this step — only the human can.**
 
 When the user clicks the link:
 1. The passport is claimed — the user becomes the owner
-2. **An API key is automatically generated** and displayed on the confirmation page
+2. If no setup key was returned by `/api/issue`, an API key may be displayed on the confirmation page
 3. The page redirects to the passport after 15 seconds
 
-Ask the user to paste the API key back to you. The key has `read` and `status` scopes — enough for you to read your passport and verify tasks.
+Ask the user to paste the API key back to you if one was shown. Use the
+`api_key_scopes` returned by the API; setup keys are typically scoped to
+`["read"]`.
 
 Once you have the API key, save everything to `aport-passport.json`:
 
@@ -176,18 +187,41 @@ Once you have the API key, save everything to `aport-passport.json`:
   "slug": "your-agent-name",
   "passport_url": "https://aport.id/passport/your-agent-name",
   "api_key": "apk_...",
+  "api_key_id": "key_...",
+  "api_key_scopes": ["read"],
   "created_at": "2026-03-13T..."
 }
 ```
 
 Add `aport-passport.json` to `.gitignore` — it contains your API key.
 
+## Optional: Install runtime guardrails
+
+Passport issuance gives the agent identity. Runtime guardrails install
+deterministic enforcement for a framework.
+
+```sh
+curl -fsSL https://aport.io/install.sh | bash -s -- claude-code
+```
+
+Or run the package directly:
+
+```sh
+npx @aporthq/aport-agent-guardrails claude-code
+```
+
+Replace `claude-code` with the framework being installed. If no framework is
+provided, the installer will prompt for one. Supported framework IDs are
+`claude-code`, `cursor`, `openclaw`, `langchain`, `crewai`, `deerflow`, and
+`n8n`.
+
 ## Step 7: Fetch your passport
 
-You can fetch your passport data at any time, no authentication needed:
+You can fetch your passport data at any time:
 
 ```
 GET https://aport.io/api/passports/YOUR_AGENT_ID
+Authorization: Bearer YOUR_API_KEY
 ```
 
 Or by slug via aport.id:
@@ -280,12 +314,20 @@ Each model maps to a breed — a personality label on your passport:
 | `claude-haiku` | Claude Haiku | Greyhound — built for speed, elegant under pressure |
 | `mistral` | Mistral (local) | Feral Cat — doesn't need anyone, runs on your hardware |
 | `llama-3` | Llama 3 (local) | Wolf — open, powerful, belongs to no one |
+| `claude-code` | Claude Code | Labrador — practical coding partner with strong tool use |
+| `cursor` | Cursor | Border Collie — focused on code, always scanning the repo |
 | `langchain` | LangChain | Sheepdog — always orchestrating, never the star |
+| `crewai` | CrewAI | Beagle Pack — collaborative, noisy, mission-oriented |
+| `deerflow` | DeerFlow | Trail Hound — research-minded and good at long routes |
+| `n8n` | n8n | Switchboard Terrier — tiny, wired, connects everything |
 | `openclaw` | OpenClaw | Husky — built for the cold, pulls heavy loads |
 
 If your model isn't listed, use a custom string — you'll get "Mixed Breed — origin unknown, character undeniable."
 
-**You should select the framework that matches what you actually are.** If you're Claude Sonnet, use `claude-sonnet`. If you're GPT-4o, use `gpt-4o`. Be honest about your breed.
+**You should select the framework that matches what you actually are.** If you
+are installing runtime guardrails for Claude Code, use `claude-code`. If you are
+describing a model identity, use the model ID such as `claude-sonnet` or
+`gpt-4o`. Be honest about your breed.
 
 ## Error handling
 
@@ -357,6 +399,9 @@ This skill registers you. There are 4 more skills in this repo for after you hav
 
 - **Create a passport** — https://aport.id/create
 - **Manage your passport** — https://aport.id/manage
+- **Install runtime guardrails** — https://aport.io/install.sh
+- **Guardrails package** — https://github.com/aporthq/aport-agent-guardrails
+- **Framework presets** — https://aport.io/api/public/framework-passport-presets
 - **Gallery** — https://aport.id/gallery
 - **Skills** — https://github.com/aporthq/aport-skills
 - **Agent Directory** — https://aport.id/agents.txt
